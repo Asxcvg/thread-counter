@@ -163,7 +163,7 @@ static double detectThreadDensity(const Mat& image) {
 int main(int argc, char** argv) {
     if (argc < 2) {
         cout << "Usage: ./cvengine <frame.raw> [--debug]\n"
-                "  Expects an 8-bit 1024x1024 raw mono frame (OV9281 windowed output)."
+                "  Expects an 8-bit 1024x1024 raw mono frame."
              << endl;
         return -1;
     }
@@ -281,19 +281,25 @@ int main(int argc, char** argv) {
 
     double total = t0.ms();
 
-    json out;
-    out["image"] = argv[1];
-    out["size"] = {pf.cols, pf.rows};
-    out["warp_threads"] = warpCount;
-    out["weft_threads"] = weftCount;
-    out["warp_angle_rot"] = ang.warpAngleRot;
-    out["weft_angle_rot"] = ang.weftAngleRot;
-    out["warp_freq"] = ang.warpFreq;
-    out["weft_freq"] = ang.weftFreq;
-    out["box_dim"] = boxDim;
-    out["steps_ms"] = steps;
-    out["total_ms"] = total;
-
-    cout << out.dump(2) << endl;
+    if (DEBUG_MODE) {
+        json out;
+        out["image"] = argv[1];
+        out["size"] = {pf.cols, pf.rows};
+        out["warp_threads"] = warpCount;
+        out["weft_threads"] = weftCount;
+        out["warp_angle_rot"] = ang.warpAngleRot;
+        out["weft_angle_rot"] = ang.weftAngleRot;
+        out["warp_freq"] = ang.warpFreq;
+        out["weft_freq"] = ang.weftFreq;
+        out["box_dim"] = boxDim;
+        out["steps_ms"] = steps;
+        out["total_ms"] = total;
+        cout << out.dump(2) << endl;
+    } else {
+        json out;
+        out["warp_threads"] = warpCount;
+        out["weft_threads"] = weftCount;
+        cout << out.dump(2) << endl;
+    }
     return 0;
 }

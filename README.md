@@ -86,19 +86,15 @@ The engine consumes raw monochrome frames and returns an inspection verdict in a
 
 ## Build and Usage
 
-The project depends on a C++17 compiler, OpenCV, and the nlohmann/json single-header library. The engine is a single translation unit. It is built with
+The project depends on a C++17 compiler, the OpenCV computer-vision library, and the nlohmann/json single-header library, and compiles as a single translation unit. Build it from the repository root with
 
 g++ -std=c++17 -O2 -o cvengine src/cvengine.cpp $(pkg-config --cflags --libs opencv4)
 
-and invoked with
+To inspect a sample, pass the path to an 8-bit 1024-by-1024 monochrome raw frame:
 
 ./cvengine /path/to/frame.raw
 
-The program prints a JSON object to standard output of the form
-
-{"warp_threads":102,"weft_threads":64,"warp_angle_rot":-0.0,"weft_angle_rot":-3.27,"warp_freq":115.0,"weft_freq":70.11,"box_dim":886.79,"total_ms":72.35,"steps_ms":{"raw_ingest":0.48,"preprocess":8.05,"extractAngles":5.94,"detectROI":1.87,"rotate":6.31,"erode_masks":1.17,"count":1.42}}
-
-Supplying the additional argument --debug writes the intermediate images binary.jpg, 2D_FFT_magnitude.jpeg, rotated_binary_warp.jpg, rotated_binary_weft.jpg, vertical_mask.jpg, and horizontal_mask.jpg to the working directory, and the JSON includes warp_angle_rot, weft_angle_rot, warp_freq, weft_freq, steps_ms, and total_ms. Without --debug the program writes nothing to disk and is suitable for batch processing.
+The program prints, in JSON, the two thread counts it derives, warp_threads and weft_threads, expressed in threads per 10 cm. This is the only output in normal operation, so a batch of rolls can be processed and parsed without any further noise. Supplying the additional argument --debug enables diagnostics: the program then writes the intermediate pipeline images to the working directory for inspection and reports the recovered correction angles, the estimated frequencies, the calibration box dimension, and the per-stage timing alongside the two counts.
 
 ## Repository Layout
 
