@@ -1,0 +1,25 @@
+# Compiled binaries
+/cvengine
+/cvengineV1
+/cvengineORIGINAL
+*.exe
+*.out
+
+# Debug visualization output (generated with --debug)
+*.jpg
+*.jpeg
+# ... except the pipeline illustrations tracked under images/
+!images/
+!images/*.jpg
+!images/*.jpeg
+
+# Build artifacts
+*.o
+*.a
+*.so
+
+# IDE / OS
+.DS_Store
+.vscode/
+.idea/
+cmake-build-*/
