@@ -1,7 +1,7 @@
 /*
  * Medical Gauze Thread Counter
  *
- * Sequential pipeline consuming raw 8-bit monochrome frames, so there is no JPEG
+ * Sequential pipeline consuming raw 8-bit monochrome frames
  * decode and no colour conversion. The 2D-DFT, evaluated on a 256x256
  * downscale of the binary, yields the warp and weft angles. The binary is
  * rotated and directionally eroded into vertical and horizontal masks, and
