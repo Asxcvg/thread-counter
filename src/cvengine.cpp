@@ -110,7 +110,7 @@ static Angles extractAngles(const Mat& binary) {
         Mat vis;
         logM.convertTo(vis, CV_8U);
         applyColorMap(vis, vis, COLORMAP_JET);
-        imwrite("images/2D_FFT_magnitude.jpeg", vis);
+        imwrite("images/2D_FFT_magnitude.png", vis);
     }
 
     int cx = mag.cols / 2;
@@ -207,21 +207,23 @@ static Mat directionalErode(const Mat& mask, bool horizontal) {
     return out;
 }
 
-static double detectThreadCount(const Mat& mask) {
-    int startCol = static_cast<int>(round(mask.cols * 0.25));
-    int endCol = static_cast<int>(round(mask.cols * 0.75));
+static double detectThreadDensity(const Mat& image) {
+    int startRow = static_cast<int>(round(image.rows * 0.25));
+    int endRow = static_cast<int>(round(image.rows * 0.75));
+    int startCol = static_cast<int>(round(image.cols * 0.25));
+    int endCol = static_cast<int>(round(image.cols * 0.75));
 
     double acc = 0.0;
-    for (int col = startCol; col < endCol; col++) {
+    for (int j = startCol; j < endCol; j++) {
         int transitions = 0;
-        for (int row = 1; row < mask.rows; row++) {
-            uchar prev = mask.at<uchar>(row - 1, col);
-            uchar curr = mask.at<uchar>(row, col);
+        for (int i = startRow; i < endRow; i++) {
+            uchar prev = image.at<uchar>(i - 1, j);
+            uchar curr = image.at<uchar>(i, j);
             if (prev < curr) transitions++;
         }
         acc += transitions;
     }
-    return acc / (endCol - startCol);
+    return acc / (endCol - startCol) / (endRow - startRow);
 }
 
 static void printJsonString(ostream& os, const string& s) {
@@ -269,29 +271,30 @@ int main(int argc, char** argv) {
 
     Mat frame = readRawFrame(argv[1], SIDE);
     Mat binary = preprocess(frame);
-    if (DEBUG_MODE) imwrite("images/binary.jpg", binary);
+    if (DEBUG_MODE) imwrite("images/binary.png", binary);
 
     ROI roi = detectROI(binary);
     Mat roiImage = binary(roi.rect);
+    if (DEBUG_MODE) imwrite("images/cropped_binary.png", roiImage);
 
     Angles angles = extractAngles(roiImage);
 
     Mat warpRotated = rotateBinary(roiImage, angles.warpAngleRot);
     Mat weftRotated = rotateBinary(roiImage, angles.weftAngleRot);
     if (DEBUG_MODE) {
-        imwrite("images/rotated_binary_warp.jpg", warpRotated);
-        imwrite("images/rotated_binary_weft.jpg", weftRotated);
+        imwrite("images/rotated_binary_warp.png", warpRotated);
+        imwrite("images/rotated_binary_weft.png", weftRotated);
     }
 
     Mat warpMask = directionalErode(warpRotated, false);
     Mat weftMask = directionalErode(weftRotated, true);
     if (DEBUG_MODE) {
-        imwrite("images/vertical_mask.jpg", warpMask);
-        imwrite("images/horizontal_mask.jpg", weftMask);
+        imwrite("images/vertical_mask.png", warpMask);
+        imwrite("images/horizontal_mask.png", weftMask);
     }
 
-    int warpCount = static_cast<int>(round(detectThreadCount(warpMask.t())));
-    int weftCount = static_cast<int>(round(detectThreadCount(weftMask)));;
+    int warpCount = static_cast<int>(round(detectThreadDensity(warpMask.t()) * roi.boxDim));
+    int weftCount = static_cast<int>(round(detectThreadDensity(weftMask) * roi.boxDim));
 
     if (DEBUG_MODE)
         printDebugJSON(argv[1], angles, warpCount, weftCount, roi.boxDim);

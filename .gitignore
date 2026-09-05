@@ -12,6 +12,10 @@
 !images/
 !images/*.jpg
 !images/*.jpeg
+!images/*.png
+
+# Batch debug visualization output
+/debug_images/
 
 # Build artifacts
 *.o
