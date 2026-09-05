@@ -34,7 +34,7 @@ $$F(u,v) = \sum_{x=0}^{M-1}\sum_{y=0}^{N-1} f(x,y)\, e^{-j 2\pi\left(\frac{ux}{M
 
 where the frequency-domain representation F is complex. Before the transform, the image is multiplied by a Hanning window to attenuate spectral leakage and sharpen the resulting peaks. The magnitudes are then log-compressed, the zero-frequency pedestal at the spectrum centre is suppressed, and the spectrum is blurred and thresholded into a cluster map. Within the angular sector between negative 45 and positive 45 degrees, representative of gradients perpendicular to near-vertical warp threads, the closest cluster is taken to define the warp angle. Within the sector between positive 45 and positive 135 degrees, the closest cluster defines the weft angle.
 
-Because the 2D-DFT is by far the most expensive operation in the pipeline, it is not evaluated at full resolution. Instead, the ROI is downscaled to a quarter of its size, a 256-square image, using area interpolation; the transform runs on that smaller image purely to recover the two correction angles. The actual thread counting is always performed on the full-resolution image.
+Because the 2D-DFT is by far the most expensive operation in the pipeline, it is not evaluated at full resolution. Instead, the cropped ROI is downscaled to a 256-square image using area interpolation; the transform runs on that smaller image purely to recover the two correction angles. The actual thread counting is always performed on the full-resolution cropped ROI.
 
 ### Directional Morphological Masking
 
@@ -42,7 +42,7 @@ The cleaned binary of the ROI is rotated by the recovered warp angle so that war
 
 ### Transition Counting
 
-Thread counting proceeds by scanning profiles across the masks. Within the central band spanning 25 to 75 percent of each dimension, every dark-to-light transition along a profile marks the crossing of one thread. Transitions are accumulated column by column, averaged over the band, and the resulting per-pixel density is scaled by boxDim to recover the thread count over the full physical sample. The warp count is obtained by transposing the warp mask and scanning as above; the weft count is obtained by scanning the weft mask directly.
+Thread counting proceeds by scanning full-height profiles down each column. Every dark-to-light transition along a profile marks the crossing of one thread, so the number of transitions encountered along one column equals the number of threads in that direction. The transitions are accumulated over the central columns spanning 25 to 75 percent of the mask width and averaged, yielding a linear thread density expressed directly as thread crossings per profile. Because a full-height profile crosses every thread in the sample, no further scaling is required to recover the count over the full physical sample. The warp count is obtained by transposing the warp mask and scanning as above; the weft count is obtained by scanning the weft mask directly.
 
 ### Pipeline Illustration
 
@@ -86,7 +86,7 @@ The engine consumes raw monochrome frames and returns an inspection verdict in a
 
 ## Build and Usage
 
-The project depends on a C++17 compiler, the OpenCV computer-vision library, and the nlohmann/json single-header library, and compiles as a single translation unit. Build it from the repository root with
+The project depends on a C++17 compiler and the OpenCV computer-vision library, and compiles as a single translation unit. Build it from the repository root with
 
 g++ -std=c++17 -O2 -o cvengine src/cvengine.cpp $(pkg-config --cflags --libs opencv4)
 
@@ -94,7 +94,7 @@ To inspect a sample, pass the path to an 8-bit 1024-by-1024 monochrome raw frame
 
 ./cvengine /path/to/frame.raw
 
-The program prints, in JSON, the two thread counts it derives, warp_threads and weft_threads, expressed in threads per 10 cm. This is the only output in normal operation, so a batch of rolls can be processed and parsed without any further noise. Supplying the additional argument --debug enables diagnostics: the program then writes the intermediate pipeline images to the working directory for inspection and reports the recovered correction angles, the estimated frequencies, the calibration box dimension, and the per-stage timing alongside the two counts.
+The program prints the two thread counts it derives, warp_threads and weft_threads, expressed in threads per 10 cm. The output is valid, parseable JSON, so it can be piped directly to any JSON parser or loaded by a scripting language. This is the only output in normal operation, so a batch of rolls can be processed and parsed without any further noise. Supplying the additional argument --debug enables diagnostics: the program then writes the intermediate pipeline images to the working directory for inspection and reports the recovered correction angles, the estimated frequencies, and the calibration box dimension alongside the two counts.
 
 ## Repository Layout
 
