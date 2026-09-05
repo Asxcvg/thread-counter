@@ -44,6 +44,8 @@ The cleaned binary of the ROI is rotated by the recovered warp angle so that war
 
 Thread counting proceeds by scanning full-height profiles down each column. Every dark-to-light transition along a profile marks the crossing of one thread, so the number of transitions encountered along one column equals the number of threads in that direction. The transitions are accumulated over the central columns spanning 25 to 75 percent of the mask width and averaged, yielding a linear thread density expressed directly as thread crossings per profile. Because a full-height profile crosses every thread in the sample, no further scaling is required to recover the count over the full physical sample. The warp count is obtained by transposing the warp mask and scanning as above; the weft count is obtained by scanning the weft mask directly.
 
+The central-column band is what keeps the measurement honest under rotation. Gauze is flexible, so warp and weft may deviate from 90 degrees up to a worst case of 45 degrees. A rotated square's diagonal exceeds its width, so rotating the crop pushes real threads out of the corners and leaves white padding from the rotation border. Restricting the profile columns to the central 25 to 75 percent guarantees no padding is ever sampled, even at a full 45-degree misalignment, while scanning the full height keeps every thread crossing.
+
 ### Pipeline Illustration
 
 The following images, generated in debug mode from validation sample 12, show the principal stages of the pipeline. Each is referenced relative to the images directory of this repository.
